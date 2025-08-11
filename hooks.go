@@ -35,6 +35,7 @@ const (
 	OnSubscribe
 	OnSubscribed
 	OnSelectSubscribers
+	OnPublishToSubscribers
 	OnUnsubscribe
 	OnUnsubscribed
 	OnPublish
@@ -94,6 +95,7 @@ type Hook interface {
 	OnSubscribe(cl *Client, pk packets.Packet) packets.Packet
 	OnSubscribed(cl *Client, pk packets.Packet, reasonCodes []byte)
 	OnSelectSubscribers(subs *Subscribers, pk packets.Packet) *Subscribers
+	OnPublishToSubscribers(subs *Subscribers, pk packets.Packet)
 	OnUnsubscribe(cl *Client, pk packets.Packet) packets.Packet
 	OnUnsubscribed(cl *Client, pk packets.Packet)
 	OnPublish(cl *Client, pk packets.Packet) (packets.Packet, error)
@@ -366,6 +368,15 @@ func (h *Hooks) OnSelectSubscribers(subs *Subscribers, pk packets.Packet) *Subsc
 		}
 	}
 	return subs
+}
+
+// OnPublishToSubscribers is called when subscribers have been collected for a topic
+func (h *Hooks) OnPublishToSubscribers(subs *Subscribers, pk packets.Packet) {
+	for _, hook := range h.GetAll() {
+		if hook.Provides(OnSelectSubscribers) {
+			hook.OnPublishToSubscribers(subs, pk)
+		}
+	}
 }
 
 // OnUnsubscribe is called when a client unsubscribes from one or more filters. This method
