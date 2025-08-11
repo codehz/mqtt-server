@@ -373,7 +373,7 @@ func (h *Hooks) OnSelectSubscribers(subs *Subscribers, pk packets.Packet) *Subsc
 // OnPublishToSubscribers is called when subscribers have been collected for a topic
 func (h *Hooks) OnPublishToSubscribers(subs *Subscribers, pk packets.Packet) {
 	for _, hook := range h.GetAll() {
-		if hook.Provides(OnSelectSubscribers) {
+		if hook.Provides(OnPublishToSubscribers) {
 			hook.OnPublishToSubscribers(subs, pk)
 		}
 	}
