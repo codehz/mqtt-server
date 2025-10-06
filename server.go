@@ -1124,6 +1124,7 @@ func (s *Server) publishRetainedToClient(cl *Client, sub packets.Subscription, e
 	}
 
 	sub.FwdRetainedFlag = true
+	published := false
 	for _, pkv := range s.Topics.Messages(sub.Filter) { // [MQTT-3.8.4-4]
 		_, err := s.publishToClient(cl, sub, pkv)
 		if err != nil {
@@ -1131,6 +1132,11 @@ func (s *Server) publishRetainedToClient(cl *Client, sub packets.Subscription, e
 			continue
 		}
 		s.hooks.OnRetainPublished(cl, pkv)
+		published = true
+	}
+
+	if !published {
+		s.hooks.OnDrainedMessage(cl, sub)
 	}
 }
 

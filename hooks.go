@@ -43,6 +43,7 @@ const (
 	OnPublishDropped
 	OnRetainMessage
 	OnRetainPublished
+	OnDrainedMessage
 	OnQosPublish
 	OnQosComplete
 	OnQosDropped
@@ -103,6 +104,7 @@ type Hook interface {
 	OnPublishDropped(cl *Client, pk packets.Packet)
 	OnRetainMessage(cl *Client, pk packets.Packet, r int64)
 	OnRetainPublished(cl *Client, pk packets.Packet)
+	OnDrainedMessage(cl *Client, sub packets.Subscription)
 	OnQosPublish(cl *Client, pk packets.Packet, sent int64, resends int)
 	OnQosComplete(cl *Client, pk packets.Packet)
 	OnQosDropped(cl *Client, pk packets.Packet)
@@ -469,6 +471,15 @@ func (h *Hooks) OnRetainPublished(cl *Client, pk packets.Packet) {
 	}
 }
 
+// OnNoRetainMessage is called when no retained message is found for a subscription.
+func (h *Hooks) OnDrainedMessage(cl *Client, sub packets.Subscription) {
+	for _, hook := range h.GetAll() {
+		if hook.Provides(OnDrainedMessage) {
+			hook.OnDrainedMessage(cl, sub)
+		}
+	}
+}
+
 // OnQosPublish is called when a publish packet with Qos >= 1 is issued to a subscriber.
 // In other words, this method is called when a new inflight message is created or resent.
 // It is typically used to store a new inflight message.
@@ -821,6 +832,9 @@ func (h *HookBase) OnRetainMessage(cl *Client, pk packets.Packet, r int64) {}
 
 // OnRetainPublished is called when a retained message is published.
 func (h *HookBase) OnRetainPublished(cl *Client, pk packets.Packet) {}
+
+// OnDrainedMessage is called when no retained message is found for a subscription.
+func (h *HookBase) OnDrainedMessage(cl *Client, sub packets.Subscription) {}
 
 // OnQosPublish is called when a publish packet with Qos > 1 is issued to a subscriber.
 func (h *HookBase) OnQosPublish(cl *Client, pk packets.Packet, sent int64, resends int) {}
